@@ -1,0 +1,48 @@
+.container {
+  text-align: center;
+  padding: 2rem;
+}
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+
+  &:hover {
+    filter: drop-shadow(0 0 2em $primary-color);
+  }
+}
+
+.countDisplay {
+  font-size: 2rem;
+  font-weight: bold;
+  color: $secondary-color;
+  margin-bottom: 1rem;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.numberList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  gap: 0.5rem;
+}
+
+.numberItem {
+  background-color: $background-color;
+  padding: 0.5rem;
+  border-radius: 4px;
+}

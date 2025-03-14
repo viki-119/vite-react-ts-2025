@@ -2,17 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import Routes from './routes';
-import './App.css';
+import styles from './App.module.scss';
 
 const App: React.FC = () => {
   // const [state, setState] = useState<string>(() => {
   //   return '123'
   // });
-
   return (
     <>
-      <nav>
-        <ul style={{ display: 'flex', gap: '20px' }}>
+      <nav className={styles.nav}>
+        <ul>
           <li>
             <Link to="/">Home</Link>
           </li>
@@ -21,7 +20,9 @@ const App: React.FC = () => {
           </li>
         </ul>
       </nav>
-      <Routes />
+      <div className={styles.content}>
+        <Routes />
+      </div>
     </>
   );
 };

@@ -1,11 +1,12 @@
-import { Button } from "antd";
-import useCountDown from "../../components/useCountDown";
-import reactLogo from '../../assets/react.svg'
-import viteLogo from '/vite.svg'
-  // useState, useEffect, useRef, use, Children 
+import { Button } from 'antd';
+import viteLogo from '/vite.svg';
+
+import useCountDown from '../../components/useCountDown';
+import reactLogo from '../../assets/react.svg';
+// useState, useEffect, useRef, use, Children
 
 const Home: React.FC = () => {
-  const {count, start, pause, reset} = useCountDown({count: 10})
+  const { count, start, pause, reset } = useCountDown({ count: 10 });
   return (
     <div>
       <div>
@@ -17,17 +18,15 @@ const Home: React.FC = () => {
         </a>
       </div>
       <div>{count}</div>
-      <div className='btn-operate'>
+      <div className="btn-operate">
         <Button onClick={start}>开始</Button>
         <Button onClick={pause}>暂停</Button>
         <Button onClick={reset}>重置</Button>
       </div>
-      {
-        new Array(100).fill(100).map((_, key) => {
-          return <div key={key}>{key}</div>
-        })
-      }
+      {new Array(100).fill(100).map((_, key) => {
+        return <div key={key}>{key}</div>;
+      })}
     </div>
   );
-}
+};
 export default Home;

@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-const useCountDown = (props: {count: number}): {
+const useCountDown = (props: {
+  count: number;
+}): {
   count: number;
   start: () => void;
   isRunning: boolean;
@@ -16,25 +18,25 @@ const useCountDown = (props: {count: number}): {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
       setIsRunning(false); // 同步状态
-    };
-  }, [])
+    }
+  }, []);
 
   const setCountData = useCallback(() => {
-    setCount((preCount) => {
-      if (preCount <=0) {
+    setCount(preCount => {
+      if (preCount <= 0) {
         clearCountInterval();
         return 0;
       }
-      return preCount-1;
-    })
-  }, [clearCountInterval])
+      return preCount - 1;
+    });
+  }, [clearCountInterval]);
 
   const start = useCallback(() => {
-    if(isRunning || count <= 0) return; 
+    if (isRunning || count <= 0) return;
     clearCountInterval();
     setIsRunning(true);
-    intervalRef.current = setInterval(setCountData, 1000)
-  }, [setCountData, isRunning, clearCountInterval, count])
+    intervalRef.current = setInterval(setCountData, 1000);
+  }, [setCountData, isRunning, clearCountInterval, count]);
 
   useEffect(() => {
     setCount(props.count);
@@ -42,7 +44,7 @@ const useCountDown = (props: {count: number}): {
       clearCountInterval();
       intervalRef.current = setInterval(setCountData, 1000);
     }
-  }, [props.count, isRunning, clearCountInterval, setCountData])
+  }, [props.count, isRunning, clearCountInterval, setCountData]);
 
   useEffect(() => {
     return (): void => {
@@ -51,18 +53,18 @@ const useCountDown = (props: {count: number}): {
         intervalRef.current = null;
       }
     };
-  }, [])
+  }, []);
 
   const pause = useCallback(() => {
     clearCountInterval();
-  }, [clearCountInterval])
+  }, [clearCountInterval]);
 
   const reset = useCallback(() => {
-    pause()
+    pause();
     setCount(props.count);
-  }, [props.count, pause])
+  }, [props.count, pause]);
 
-  return { count, start, isRunning, pause, reset }
-}
+  return { count, start, isRunning, pause, reset };
+};
 
-export default useCountDown; 
+export default useCountDown;

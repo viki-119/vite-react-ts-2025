@@ -1,5 +1,5 @@
 import React from 'react';
-import {useParams, useLocation} from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 
 import { getUrlSearchParams } from '../../common/utils';
 
@@ -8,9 +8,7 @@ const About: React.FC = () => {
   const location = useLocation();
   const searchParams = getUrlSearchParams(location.search);
   console.log(params, searchParams);
-  return (
-    <div>About</div>
-  )
-}
+  return <div>About</div>;
+};
 
 export default About;

@@ -1,6 +1,12 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-const useCountDown = (props: {count: number}) => {
+const useCountDown = (props: {count: number}): {
+  count: number;
+  start: () => void;
+  isRunning: boolean;
+  pause: () => void;
+  reset: () => void;
+} => {
   const intervalRef = useRef<number>(null);
   const [count, setCount] = useState(props.count);
   const [isRunning, setIsRunning] = useState(false);
@@ -39,7 +45,7 @@ const useCountDown = (props: {count: number}) => {
   }, [props.count, isRunning, clearCountInterval, setCountData])
 
   useEffect(() => {
-    return () => {
+    return (): void => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;

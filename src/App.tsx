@@ -1,10 +1,11 @@
+import React from 'react'
 import { Link } from 'react-router-dom'
 
 import Routes from './routes'
 import './App.css'
 
 
-function App() {
+const App:React.FC = () => {
   // const [state, setState] = useState<string>(() => {
   //   return '123'
   // });

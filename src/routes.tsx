@@ -2,7 +2,7 @@ import { lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
 const Home = lazy(() => import('./pages/home'));
 const About = lazy(() => import('./pages/about'));
-export default function RoutesBrowser() {
+const RoutesBrowser:React.FC = () => {
   return (
     <Routes>
       <Route path='/' element={<Home />} />
@@ -10,3 +10,5 @@ export default function RoutesBrowser() {
     </Routes>
   )
 }
+
+export default RoutesBrowser;

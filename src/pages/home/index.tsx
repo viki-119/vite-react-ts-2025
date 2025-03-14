@@ -4,7 +4,7 @@ import reactLogo from '../../assets/react.svg'
 import viteLogo from '/vite.svg'
   // useState, useEffect, useRef, use, Children 
 
-export default function Home() {
+const Home: React.FC = () => {
   const {count, start, pause, reset} = useCountDown({count: 10})
   return (
     <div>
@@ -30,3 +30,4 @@ export default function Home() {
     </div>
   );
 }
+export default Home;

@@ -17,14 +17,14 @@
   transition: filter 300ms;
 
   &:hover {
-    filter: drop-shadow(0 0 2em $primary-color);
+    filter: drop-shadow(0 0 2em primary-color());
   }
 }
 
 .countDisplay {
   font-size: 2rem;
   font-weight: bold;
-  color: $secondary-color;
+  color: secondary-color();
   margin-bottom: 1rem;
 }
 
@@ -42,7 +42,7 @@
 }
 
 .numberItem {
-  background-color: $background-color;
+  background-color: background-color();
   padding: 0.5rem;
   border-radius: 4px;
 }

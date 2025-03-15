@@ -1,6 +1,6 @@
 .nav {
   padding: 1rem;
-  background-color: $background-color;
+  background-color: background-color();
 
   ul {
     display: flex;
@@ -11,17 +11,17 @@
   }
 
   a {
-    color: $primary-color;
+    color: primary-color();
     text-decoration: none;
     font-weight: 500;
 
     &:hover {
-      color: darken($primary-color, 10%);
+      filter: brightness(0.9);
     }
   }
 }
 
 .content {
   padding: 2rem;
-  color: $text-color;
+  color: text-color();
 }

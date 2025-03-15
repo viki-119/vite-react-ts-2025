@@ -5,7 +5,18 @@
   --background-color: #f0f2f5;
 }
 
-$primary-color: var(--primary-color);
-$secondary-color: var(--secondary-color);
-$text-color: var(--text-color);
-$background-color: var(--background-color);
+@function primary-color() {
+  @return var(--primary-color);
+}
+
+@function secondary-color() {
+  @return var(--secondary-color);
+}
+
+@function text-color() {
+  @return var(--text-color);
+}
+
+@function background-color() {
+  @return var(--background-color);
+}

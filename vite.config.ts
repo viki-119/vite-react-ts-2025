@@ -21,4 +21,11 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    port: 8000,
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  },
 });

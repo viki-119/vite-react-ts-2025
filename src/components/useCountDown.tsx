@@ -9,7 +9,7 @@ const useCountDown = (props: {
   pause: () => void;
   reset: () => void;
 } => {
-  const intervalRef = useRef<number>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [count, setCount] = useState(props.count);
   const [isRunning, setIsRunning] = useState(false);
 

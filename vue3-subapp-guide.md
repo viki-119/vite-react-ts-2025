@@ -1,130 +1,446 @@
-# Vue3 子应用接入乾坤指南
+# Vue3 子应用使用指南
 
-这个指南将帮助你将 Vue3 子应用（<https://github.com/viki-119/vite-vue3-ts-2025.git）配置为乾坤微前端架构的子应用。>
+## 1. 创建事件总线工具
 
-## 步骤 1: 安装依赖
-
-在子应用项目中安装 qiankun 相关依赖：
-
-```bash
-cd vite-vue3-ts-2025
-npm install vite-plugin-qiankun -D
-```
-
-## 步骤 2: 修改 Vite 配置
-
-修改 `vite.config.ts` 文件：
+首先，创建一个工具文件来管理事件总线：
 
 ```typescript
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import qiankun from 'vite-plugin-qiankun';
+// src/utils/eventBus.ts
+let eventBus: any = null;
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(),
-    qiankun('vue3-sub-app', {
-      // 子应用名称，需要与主应用中注册的名称一致
-      useDevMode: true,
-    }),
-  ],
-  server: {
-    port: 5173,
-    cors: true,
-    origin: 'http://localhost:5173',
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
-  },
-  // 确保正确的基础路径
-  base: process.env.NODE_ENV === 'production' ? '/vite-vue3-ts-2025/' : '/',
-});
-```
-
-## 步骤 3: 修改入口文件
-
-修改 `src/main.ts` 文件，添加乾坤生命周期：
-
-```typescript
-import { createApp } from 'vue';
-import { createRouter, createWebHistory } from 'vue-router';
-import { renderWithQiankun, qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
-import App from './App.vue';
-import routes from './router';
-
-let app: any;
-let router: any;
-let history: any;
-
-function render(props: any = {}) {
-  const { container } = props;
-  history = createWebHistory(qiankunWindow.__POWERED_BY_QIANKUN__ ? '/vite-vue3-ts-2025' : '/');
-  router = createRouter({
-    history,
-    routes,
-  });
-
-  app = createApp(App);
-  app.use(router);
-  app.mount(container ? container.querySelector('#app') : '#app');
+export function setEventBus(bus: any) {
+  eventBus = bus;
 }
 
-// 判断是否在乾坤环境下运行
-renderWithQiankun({
-  mount(props) {
-    console.log('vue3子应用 mount');
-    render(props);
-  },
-  bootstrap() {
-    console.log('vue3子应用 bootstrap');
-  },
-  unmount(props: any) {
-    console.log('vue3子应用 unmount');
-    app.unmount();
-    app = null;
-    router = null;
-    history = null;
-  },
-  update(props: any) {
-    console.log('vue3子应用 update');
-    console.log(props);
-  },
-});
-
-// 独立运行时
-if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
-  render();
+export function getEventBus() {
+  return eventBus;
 }
 ```
 
-## 步骤 4: 修改 App.vue
+## 2. 在入口文件中初始化
 
-确保 App.vue 的根元素有 id="app"：
+在子应用的入口文件中初始化事件总线：
+
+```typescript
+// src/main.ts
+import { setEventBus } from './utils/eventBus';
+
+// 子应用的生命周期 - mount
+export async function mount(props: any) {
+  // 保存事件总线实例
+  setEventBus(props.eventBus);
+
+  // 挂载 Vue 应用
+  render(props);
+}
+```
+
+## 3. 在 Vue 组件中使用
+
+### 3.1 选项式 API 组件示例
 
 ```vue
+<!-- src/components/MessageComponent.vue -->
 <template>
-  <div id="app">
-    <router-view></router-view>
+  <div class="message-component">
+    <div class="received-message" v-if="message">收到消息: {{ message }}</div>
+
+    <div class="message-sender">
+      <input v-model="inputMessage" placeholder="输入要发送的消息" />
+      <button @click="sendMessage">发送到主应用</button>
+    </div>
   </div>
 </template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+import { getEventBus } from '../utils/eventBus';
+
+export default defineComponent({
+  name: 'MessageComponent',
+  data() {
+    return {
+      message: '',
+      inputMessage: '',
+    };
+  },
+  created() {
+    // 监听主应用消息
+    const eventBus = getEventBus();
+    if (eventBus) {
+      eventBus.on('main:message', this.handleMainMessage);
+    }
+  },
+  beforeUnmount() {
+    // 清理监听器
+    const eventBus = getEventBus();
+    if (eventBus) {
+      eventBus.off('main:message', this.handleMainMessage);
+    }
+  },
+  methods: {
+    handleMainMessage(data: any) {
+      this.message = typeof data === 'object' ? data.content : data;
+    },
+    sendMessage() {
+      const eventBus = getEventBus();
+      if (eventBus && this.inputMessage) {
+        eventBus.emit('sub:message', {
+          content: this.inputMessage,
+          timestamp: Date.now(),
+          from: 'vue3-sub-app',
+        });
+        this.inputMessage = ''; // 清空输入
+      }
+    },
+  },
+});
+</script>
+
+<style scoped>
+.message-component {
+  padding: 20px;
+}
+
+.received-message {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.message-sender {
+  display: flex;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #40a9ff;
+}
+</style>
 ```
 
-## 步骤 5: 启动子应用
+### 3.2 组合式 API 组件示例
 
-启动子应用：
+```vue
+<!-- src/components/ComposableMessage.vue -->
+<template>
+  <div class="message-component">
+    <div class="received-message" v-if="message">收到消息: {{ message }}</div>
 
-```bash
-cd vite-vue3-ts-2025
-npm run dev
+    <div class="message-sender">
+      <input v-model="inputMessage" placeholder="输入要发送的消息" />
+      <button @click="sendMessage">发送到主应用</button>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { getEventBus } from '../utils/eventBus';
+
+const message = ref('');
+const inputMessage = ref('');
+
+// 处理主应用消息
+const handleMainMessage = (data: any) => {
+  message.value = typeof data === 'object' ? data.content : data;
+};
+
+// 发送消息到主应用
+const sendMessage = () => {
+  const eventBus = getEventBus();
+  if (eventBus && inputMessage.value) {
+    eventBus.emit('sub:message', {
+      content: inputMessage.value,
+      timestamp: Date.now(),
+      from: 'vue3-sub-app',
+    });
+    inputMessage.value = ''; // 清空输入
+  }
+};
+
+// 生命周期钩子
+onMounted(() => {
+  const eventBus = getEventBus();
+  if (eventBus) {
+    eventBus.on('main:message', handleMainMessage);
+  }
+});
+
+onBeforeUnmount(() => {
+  const eventBus = getEventBus();
+  if (eventBus) {
+    eventBus.off('main:message', handleMainMessage);
+  }
+});
+</script>
+
+<style scoped>
+.message-component {
+  padding: 20px;
+}
+
+.received-message {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.message-sender {
+  display: flex;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #40a9ff;
+}
+</style>
 ```
 
-## 步骤 6: 在主应用中访问
+## 4. 在路由组件中使用
 
-确保主应用正在运行（<http://localhost:8000），然后点击"Vue3子应用"链接，即可访问集成的子应用。>
+```typescript
+// src/router/index.ts
+import { RouteRecordRaw } from 'vue-router';
+import { getEventBus } from '../utils/eventBus';
 
-## 常见问题
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('../views/Home.vue'),
+    beforeEnter: (to, from, next) => {
+      // 通知主应用路由变化
+      const eventBus = getEventBus();
+      if (eventBus) {
+        eventBus.emit('sub:route-change', {
+          to: to.path,
+          from: from.path,
+          timestamp: Date.now(),
+        });
+      }
+      next();
+    },
+  },
+];
 
-1. **跨域问题**：确保子应用的 CORS 配置正确。
-2. **资源加载问题**：确保子应用的资源路径是正确的，尤其是在生产环境。
-3. **路由冲突**：确保子应用的路由与主应用不冲突。
+export default routes;
+```
+
+## 5. 在 Vuex/Pinia 中使用
+
+### 5.1 Vuex Store 示例
+
+```typescript
+// src/store/index.ts
+import { createStore } from 'vuex';
+import { getEventBus } from '../utils/eventBus';
+
+export default createStore({
+  state: {
+    mainAppData: null,
+  },
+  mutations: {
+    SET_MAIN_APP_DATA(state, data) {
+      state.mainAppData = data;
+    },
+  },
+  actions: {
+    // 发送数据到主应用
+    sendDataToMain({ commit }, data) {
+      const eventBus = getEventBus();
+      if (eventBus) {
+        eventBus.emit('sub:state-change', {
+          data,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    // 初始化事件监听
+    initEventListeners({ commit }) {
+      const eventBus = getEventBus();
+      if (eventBus) {
+        eventBus.on('main:state-change', data => {
+          commit('SET_MAIN_APP_DATA', data);
+        });
+      }
+    },
+  },
+});
+```
+
+### 5.2 Pinia Store 示例
+
+```typescript
+// src/stores/mainAppStore.ts
+import { defineStore } from 'pinia';
+import { getEventBus } from '../utils/eventBus';
+
+export const useMainAppStore = defineStore('mainApp', {
+  state: () => ({
+    mainAppData: null,
+  }),
+  actions: {
+    // 发送数据到主应用
+    sendDataToMain(data: any) {
+      const eventBus = getEventBus();
+      if (eventBus) {
+        eventBus.emit('sub:state-change', {
+          data,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    // 初始化事件监听
+    initEventListeners() {
+      const eventBus = getEventBus();
+      if (eventBus) {
+        eventBus.on('main:state-change', data => {
+          this.mainAppData = data;
+        });
+      }
+    },
+    // 清理事件监听
+    clearEventListeners() {
+      const eventBus = getEventBus();
+      if (eventBus) {
+        eventBus.off('main:state-change');
+      }
+    },
+  },
+});
+```
+
+## 6. 最佳实践
+
+1. 事件命名规范：
+
+   - 主应用发送的事件以 'main:' 开头
+   - 子应用发送的事件以 'sub:' 开头
+   - 使用具体的动作描述，如 'message'、'state-change'、'route-change' 等
+
+2. 数据格式规范：
+
+   ```typescript
+   interface EventData {
+     content?: string; // 消息内容
+     data?: any; // 传输的数据
+     timestamp: number; // 时间戳
+     from: string; // 来源标识
+     type?: string; // 消息类型
+   }
+   ```
+
+3. 错误处理：
+
+   ```typescript
+   function safeEmit(event: string, data: any) {
+     const eventBus = getEventBus();
+     if (!eventBus) {
+       console.warn('[子应用] 事件总线未初始化');
+       return;
+     }
+     try {
+       eventBus.emit(event, {
+         ...data,
+         timestamp: Date.now(),
+         from: 'vue3-sub-app',
+       });
+     } catch (error) {
+       console.error('[子应用] 事件发送失败:', error);
+     }
+   }
+   ```
+
+4. 生命周期管理：
+
+   - 在应用挂载时初始化事件监听
+   - 在组件卸载时清理相关的事件监听
+   - 在应用卸载时清理所有事件监听
+
+5. 类型定义：
+
+   ```typescript
+   // src/types/eventBus.ts
+   export interface EventBus {
+     on(event: string, callback: (...args: any[]) => void): void;
+     off(event: string, callback: (...args: any[]) => void): void;
+     emit(event: string, ...args: any[]): void;
+   }
+
+   export interface EventData {
+     content?: string;
+     data?: any;
+     timestamp: number;
+     from: string;
+     type?: string;
+   }
+   ```
+
+## 7. 调试技巧
+
+1. 添加调试日志：
+
+   ```typescript
+   const DEBUG = process.env.NODE_ENV === 'development';
+
+   function debugLog(type: string, ...args: any[]) {
+     if (DEBUG) {
+       console.log(`[子应用][${type}]`, ...args);
+     }
+   }
+
+   // 使用示例
+   eventBus.on('main:message', data => {
+     debugLog('收到主应用消息', data);
+     // 处理消息...
+   });
+   ```
+
+2. 开发环境事件监控：
+   ```typescript
+   if (process.env.NODE_ENV === 'development') {
+     const eventBus = getEventBus();
+     if (eventBus) {
+       const originalEmit = eventBus.emit;
+       eventBus.emit = function (...args: any[]) {
+         console.log('[子应用] 发送事件:', args);
+         return originalEmit.apply(this, args);
+       };
+     }
+   }
+   ```

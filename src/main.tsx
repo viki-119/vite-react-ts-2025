@@ -11,7 +11,12 @@ import { microApps, microAppLifeCycles } from './micro-app-config';
 // 注册微应用
 registerMicroApps(microApps, microAppLifeCycles);
 // 启动 qiankun
-start();
+start({
+  sandbox: {
+    // strictStyleIsolation: true, // 启用 Shadow DOM 沙箱
+    experimentalStyleIsolation: true, // 启用 Scoped CSS
+  },
+});
 
 // 渲染主应用
 const renderApp = (): void => {

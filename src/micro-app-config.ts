@@ -9,7 +9,7 @@ import {
 export const microApps: RegistrableApp<object>[] = [
   {
     name: 'vite-vue3-ts-2025', // 子应用名称
-    entry: '//localhost:5174', // Vue3 子应用的地址
+    entry: '//localhost:5173', // Vue3 子应用的地址
     container: '#subapp-container', // 子应用挂载的容器
     activeRule: '/vite-vue3-ts-2025', // 激活规则，当 URL 以 /vite-vue3-ts-2025 开头时激活该子应用
     props: {
